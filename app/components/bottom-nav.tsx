@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Bell, PlusSquare, User } from 'lucide-react'
+import { Home, Bell, PlusSquare, User, Handshake } from 'lucide-react'
 import { useNotifications } from '../contexts/notifications-context'
 
 export function BottomNav() {
@@ -12,7 +12,7 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t h-16">
       <div className="container h-full max-w-lg mx-auto px-4">
-        <div className="grid h-full grid-cols-4 items-center justify-items-center">
+        <div className="grid h-full grid-cols-5 items-center justify-items-center">
           <Link
             href="/"
             className={pathname === '/' ? 'text-foreground' : 'text-muted-foreground'}
@@ -20,6 +20,20 @@ export function BottomNav() {
             <Home className="h-6 w-6" />
           </Link>
           
+          <Link
+            href="/bets"
+            className={pathname === '/bets' ? 'text-foreground' : 'text-muted-foreground'}
+          >
+            <Handshake className="h-6 w-6" />
+          </Link>
+
+          <Link
+            href="/create"
+            className={pathname === '/create' ? 'text-foreground' : 'text-muted-foreground'}
+          >
+            <PlusSquare className="h-6 w-6" />
+          </Link>
+
           <Link
             href="/notifications"
             className="relative"
@@ -32,13 +46,6 @@ export function BottomNav() {
                 {unreadCount}
               </span>
             )}
-          </Link>
-
-          <Link
-            href="/create"
-            className={pathname === '/create' ? 'text-foreground' : 'text-muted-foreground'}
-          >
-            <PlusSquare className="h-6 w-6" />
           </Link>
 
           <Link

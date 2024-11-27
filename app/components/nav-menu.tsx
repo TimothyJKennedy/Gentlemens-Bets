@@ -1,7 +1,7 @@
 'use client'
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { Home, User, Bell, Plus, Settings, LogOut, Moon, Sun } from "lucide-react"
+import { Home, User, Bell, Plus, Settings, LogOut, Moon, Sun, Handshake } from "lucide-react"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
@@ -61,6 +61,15 @@ export function NavMenu({ isOpen, setIsOpen }: NavMenuProps) {
               >
                 <Plus className="h-6 w-6" />
                 <span className="text-lg">Create Bet</span>
+              </Link>
+
+              <Link 
+                href="/bets" 
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 p-3 hover:bg-accent rounded-lg"
+              >
+                <Handshake className="h-6 w-6" />
+                <span className="text-lg">Manage Bets</span>
               </Link>
 
               <Link 

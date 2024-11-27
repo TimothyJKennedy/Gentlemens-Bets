@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   
   // Check if the current route is an authentication page (signin or register)
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth/signin') || 
-                    request.nextUrl.pathname.startsWith('/register')
+                    request.nextUrl.pathname.startsWith('/auth/register')
 
   // Redirect unauthenticated users to signin page if trying to access protected routes
   if (!token && !isAuthPage) {

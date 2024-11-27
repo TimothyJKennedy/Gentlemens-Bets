@@ -1,6 +1,10 @@
-import { CreateBetForm } from '@/app/components/create-bet-form'
+import CreateBetForm from '../components/create-bet-form'
 
 export default function CreatePage() {
-  return <CreateBetForm />
+  return (
+    <div className="container mx-auto py-8">
+      <CreateBetForm />
+    </div>
+  )
 }
 

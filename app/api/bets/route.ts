@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../auth/[...nextauth]/route'
 
 const ITEMS_PER_PAGE = 10
 
@@ -72,6 +74,51 @@ export async function GET(request: Request) {
     console.error('Error fetching bets:', error)
     return NextResponse.json(
       { message: 'Error fetching bets' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const { description, deadline, opponent } = await request.json()
+
+    // First find the opponent user by username
+    const opponentUser = await prisma.user.findUnique({
+      where: { username: opponent.trim() }
+    })
+
+    if (!opponentUser) {
+      return NextResponse.json(
+        { message: 'Opponent not found' },
+        { status: 400 }
+      )
+    }
+
+    const newBet = await prisma.bet.create({
+      data: {
+        description: description.trim(),
+        deadline: new Date(deadline),
+        opponentId: opponentUser.id,  // Use the actual user ID
+        creatorId: session.user.id,   // Use creatorId directly
+        status: 'PENDING',
+      },
+    })
+
+    return NextResponse.json(newBet, { status: 201 })
+  } catch (error) {
+    console.error('Error creating bet:', error)
+    return NextResponse.json(
+      { message: 'Error creating bet' },
       { status: 500 }
     )
   }
