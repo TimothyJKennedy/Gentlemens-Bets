@@ -8,16 +8,23 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  username      String     @unique
-  email         String     @unique
-  password      String
-  profileImage  String?
-  createdBets   Bet[]      @relation("CreatedBets")
-  opponentBets  Bet[]      @relation("OpponentBets")
-  bookmarks     Bookmark[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  username     String     @unique
+  email        String     @unique
+  password     String
+  profileImage String?
+  createdBets  Bet[]      @relation("CreatedBets")
+  opponentBets Bet[]      @relation("OpponentBets")
+  bookmarks    Bookmark[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum BetStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLATION_REQUESTED
 }
 
 model Bet {
@@ -28,7 +35,7 @@ model Bet {
   opponent    User?      @relation("OpponentBets", fields: [opponentId], references: [id])
   description String
   deadline    DateTime
-  status      String     @default("PENDING")
+  status      BetStatus  @default(PENDING)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   bookmarks   Bookmark[]
@@ -48,4 +55,4 @@ model Bookmark {
   @@unique([userId, betId])
   @@index([userId])
   @@index([betId])
-} 
+}

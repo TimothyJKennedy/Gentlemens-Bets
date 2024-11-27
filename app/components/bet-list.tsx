@@ -40,6 +40,33 @@ export default function BetList({ filter }: BetListProps) {
     }
   }, [inView, hasMore])
 
+  const handleRequestCancellation = async (bet: Bet) => {
+    try {
+      const response = await fetch('/api/bets', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          betId: bet.id,
+          action: 'request-cancellation'
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setLocalBets(prevBets => prevBets.map(b => b.id === bet.id ? { ...b, status: 'CANCELLATION_REQUESTED' } : b))
+        toast.success('Cancellation requested successfully!')
+      } else {
+        toast.error(data.message || 'Failed to request cancellation')
+      }
+    } catch (error) {
+      console.error('Error requesting cancellation:', error)
+      toast.error('An error occurred while requesting cancellation')
+    }
+  }
+
   const handleAcceptBet = async (bet: Bet) => {
     try {
       const response = await fetch('/api/bets', {
@@ -99,6 +126,9 @@ export default function BetList({ filter }: BetListProps) {
                 <p className="text-sm text-gray-500">
                   Deadline: {new Date(bet.deadline).toLocaleDateString()}
                 </p>
+                {bet.status === 'CANCELLATION_REQUESTED' && (
+                  <p className="text-sm text-red-500">Cancellation Requested</p>
+                )}
               </div>
 
               {/* Right: Opponent */}
@@ -133,6 +163,14 @@ export default function BetList({ filter }: BetListProps) {
             <CardFooter>
               <Button onClick={() => handleAcceptBet(bet)}>
                 Accept
+              </Button>
+            </CardFooter>
+          )}
+
+          {filter === 'active' && bet.status === 'ACTIVE' && (
+            <CardFooter>
+              <Button onClick={() => handleRequestCancellation(bet)}>
+                Request Cancellation
               </Button>
             </CardFooter>
           )}

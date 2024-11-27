@@ -10,7 +10,7 @@ export interface Bet {
   opponentId: string
   description: string
   deadline: Date
-  status: 'PENDING' | 'ACTIVE' | 'COMPLETED'
+  status: 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLATION_REQUESTED'
   createdAt: Date
   updatedAt: Date
   creator: User
@@ -18,7 +18,8 @@ export interface Bet {
   likes?: number
   comments?: number
   bookmarked?: boolean
+  cancellationRequestedBy?: string
 }
 
-export type BetStatus = 'PENDING' | 'ACTIVE' | 'COMPLETED'
+export type BetStatus = 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLATION_REQUESTED'
 export type BetFilter = 'pending' | 'active' | 'completed' | 'all'
