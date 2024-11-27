@@ -22,7 +22,7 @@ export function LoginForm() {
 
   return (
     <div suppressHydrationWarning>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md" suppressHydrationWarning>
         <CardHeader className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
           <p className="text-sm text-muted-foreground">
@@ -30,8 +30,8 @@ export function LoginForm() {
           </p>
         </CardHeader>
         
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-4" suppressHydrationWarning>
+          <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input 

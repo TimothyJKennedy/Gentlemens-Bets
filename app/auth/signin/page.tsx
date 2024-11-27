@@ -1,18 +1,15 @@
 'use client'
 
-import { LoginForm } from '../../components/login-form'
-import { useTheme } from 'next-themes'
-import { useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const LoginForm = dynamic(
+  () => import('../../components/login-form').then(mod => mod.LoginForm),
+  { ssr: false }
+)
 
 export default function LoginPage() {
-  const { setTheme } = useTheme()
-
-  useEffect(() => {
-    setTheme('light')
-  }, [setTheme])
-
   return (
-    <div className="container flex items-center justify-center min-h-screen py-12" suppressHydrationWarning>
+    <div className="container flex items-center justify-center min-h-screen py-12">
       <LoginForm />
     </div>
   )

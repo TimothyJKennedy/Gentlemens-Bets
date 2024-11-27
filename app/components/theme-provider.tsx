@@ -1,25 +1,19 @@
 "use client"
 
-import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
+import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
-interface ThemeProviderProps {
-  children: React.ReactNode
-  attribute?: 'class' | 'data-theme' | 'data-mode'
-  defaultTheme?: string
-  enableSystem?: boolean
-}
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const isAuthPage = pathname?.startsWith('/auth/')
 
-export function ThemeProvider({ 
-  children,
-  ...props
-}: ThemeProviderProps) {
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      {...props}
+    <NextThemesProvider 
+      attribute="class" 
+      defaultTheme={isAuthPage ? 'light' : 'system'}
+      enableSystem={!isAuthPage}
+      forcedTheme={isAuthPage ? 'light' : undefined}
     >
       {children}
     </NextThemesProvider>
