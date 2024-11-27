@@ -14,9 +14,14 @@ import AuthSessionProvider from '@/app/providers/session-provider'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { SessionProvider } from 'next-auth/react'
 
 // Initialize Inter font with Latin subset
 const inter = Inter({ subsets: ['latin'] })
+
+// Create a client
+const queryClient = new QueryClient()
 
 // Root layout component that wraps the entire application
 export default function RootLayout({
@@ -39,24 +44,25 @@ export default function RootLayout({
     // HTML element with language and hydration warning suppression
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        {/* Provider stack for global state and functionality */}
-        <AuthSessionProvider>
-          <ThemeProvider>
-            <AuthProvider>
-              <BookmarksProvider>
-                <NotificationsProvider>
-                  {/* Only show header if not on auth pages */}
-                  {!isAuthPage && <Header />}
-                  <NotificationStack />
-                  {/* Main content area with optional padding */}
-                  <main className={!isAuthPage ? "pb-16" : ""} suppressHydrationWarning>{children}</main>
-                  {/* Only show bottom navigation if not on auth pages */}
-                  {!isAuthPage && <BottomNav />}
-                </NotificationsProvider>
-              </BookmarksProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </AuthSessionProvider>
+        <SessionProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <AuthProvider>
+                <BookmarksProvider>
+                  <NotificationsProvider>
+                    {/* Only show header if not on auth pages */}
+                    {!isAuthPage && <Header />}
+                    <NotificationStack />
+                    {/* Main content area with optional padding */}
+                    <main className={!isAuthPage ? "pb-16" : ""} suppressHydrationWarning>{children}</main>
+                    {/* Only show bottom navigation if not on auth pages */}
+                    {!isAuthPage && <BottomNav />}
+                  </NotificationsProvider>
+                </BookmarksProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </SessionProvider>
         <Toaster position="bottom-center" />
       </body>
     </html>

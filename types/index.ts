@@ -21,5 +21,11 @@ export interface Bet {
   cancellationRequestedBy?: string
 }
 
-export type BetStatus = 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLATION_REQUESTED'
+export enum BetStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  CANCELLATION_REQUESTED = 'CANCELLATION_REQUESTED'
+}
+
 export type BetFilter = 'pending' | 'active' | 'completed' | 'all'

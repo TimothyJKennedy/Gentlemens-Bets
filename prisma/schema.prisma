@@ -13,46 +13,46 @@ model User {
   email        String     @unique
   password     String
   profileImage String?
-  createdBets  Bet[]      @relation("CreatedBets")
-  opponentBets Bet[]      @relation("OpponentBets")
-  bookmarks    Bookmark[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-}
-
-enum BetStatus {
-  PENDING
-  ACTIVE
-  COMPLETED
-  CANCELLATION_REQUESTED
+  createdBets  Bet[]      @relation("CreatedBets")
+  receivedBets Bet[]      @relation("ReceivedBets")
+  bookmarks    Bookmark[]
 }
 
 model Bet {
-  id          String     @id @default(cuid())
-  creatorId   String
-  creator     User       @relation("CreatedBets", fields: [creatorId], references: [id])
-  opponentId  String?
-  opponent    User?      @relation("OpponentBets", fields: [opponentId], references: [id])
-  description String
-  deadline    DateTime
-  status      BetStatus  @default(PENDING)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  bookmarks   Bookmark[]
-
-  @@index([creatorId])
-  @@index([opponentId])
+  id                      String     @id @default(cuid())
+  creatorId               String
+  opponentId              String
+  description             String
+  deadline                DateTime
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  cancellationRequesterId String?
+  status                  BetStatus  @default(PENDING)
+  creator                 User       @relation("CreatedBets", fields: [creatorId], references: [id])
+  opponent                User       @relation("ReceivedBets", fields: [opponentId], references: [id])
+  bookmarks               Bookmark[]
 }
 
 model Bookmark {
   id        String   @id @default(cuid())
   userId    String
   betId     String
-  user      User     @relation(fields: [userId], references: [id])
-  bet       Bet      @relation(fields: [betId], references: [id])
   createdAt DateTime @default(now())
+  bet       Bet      @relation(fields: [betId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, betId])
   @@index([userId])
   @@index([betId])
+}
+
+enum BetStatus {
+  PENDING
+  ACTIVE
+  CANCELLATION_REQUESTED
+  CANCELLED
+  COMPLETED
+  REJECTED
 }
