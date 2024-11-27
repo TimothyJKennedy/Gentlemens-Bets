@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
-export async function POST(request: Request, { params }: { params: { betId: string } }) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -14,8 +14,18 @@ export async function POST(request: Request, { params }: { params: { betId: stri
       )
     }
 
+    // Get betId from request body
+    const { betId } = await request.json()
+
+    if (!betId) {
+      return NextResponse.json(
+        { message: 'Bet ID is required' },
+        { status: 400 }
+      )
+    }
+
     const bet = await prisma.bet.findUnique({
-      where: { id: params.betId }
+      where: { id: betId }
     })
 
     if (!bet) {
@@ -33,8 +43,11 @@ export async function POST(request: Request, { params }: { params: { betId: stri
     }
 
     const updatedBet = await prisma.bet.update({
-      where: { id: params.betId },
-      data: { status: 'ACTIVE' }
+      where: { id: betId },
+      data: { 
+        status: 'ACTIVE',
+        updatedAt: new Date()
+      }
     })
 
     return NextResponse.json(updatedBet)

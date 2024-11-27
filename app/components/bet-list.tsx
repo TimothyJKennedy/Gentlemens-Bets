@@ -1,137 +1,149 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Button } from '@/components/ui/button'
+import { useInView } from 'react-intersection-observer'
+import { useBets } from '@/hooks/useBets'
+import type { Bet, BetFilter } from '@/types'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { toast } from 'react-hot-toast'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDistanceToNow } from 'date-fns'
-
-interface Bet {
-  id: string
-  description: string
-  status: string
-  deadline: Date
-  createdAt: Date
-  creator: {
-    id: string
-    username: string
-  }
-  opponent: {
-    id: string
-    username: string
-  }
-}
+import { FaHeart, FaComment, FaShare, FaBookmark } from 'react-icons/fa'
 
 interface BetListProps {
-  filter: 'PENDING' | 'ACTIVE' | 'COMPLETED'
+  filter: BetFilter
 }
 
-export function BetList({ filter }: BetListProps) {
+export default function BetList({ filter }: BetListProps) {
   const { data: session } = useSession()
-  const [bets, setBets] = useState<Bet[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const { bets, isLoading, hasMore } = useBets({
+    filter,
+    page,
+    userId: session?.user?.id,
+    bookmarksOnly: false
+  })
+  const [localBets, setLocalBets] = useState<Bet[]>([])
+  const { ref, inView } = useInView()
 
   useEffect(() => {
-    async function fetchBets() {
-      try {
-        const response = await fetch(`/api/bets?filter=${filter.toLowerCase()}&userId=${session?.user?.id}`)
-        const data = await response.json()
-        setBets(data.bets)
-      } catch (error) {
-        console.error('Error fetching bets:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    if (bets) {
+      setLocalBets(bets)
     }
+  }, [bets])
 
-    if (session?.user?.id) {
-      fetchBets()
+  useEffect(() => {
+    if (inView && hasMore) {
+      setPage(prev => prev + 1)
     }
-  }, [filter, session?.user?.id])
+  }, [inView, hasMore])
 
-  const handleAcceptBet = async (betId: string) => {
+  const handleAcceptBet = async (bet: Bet) => {
     try {
-      const response = await fetch(`/api/bets/${betId}/accept`, {
-        method: 'POST',
+      const response = await fetch('/api/bets', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          betId: bet.id,
+          action: 'accept'
+        })
       })
-      if (response.ok) {
-        // Refresh the bets list
-        const updatedBets = bets.map(bet => 
-          bet.id === betId ? { ...bet, status: 'ACTIVE' } : bet
-        )
-        setBets(updatedBets)
+
+      const data = await response.json()
+
+      if (response.ok || data.alreadyActive) {
+        if (filter === 'pending') {
+          // Update local state to remove the accepted bet
+          setLocalBets(prevBets => prevBets.filter(b => b.id !== bet.id))
+        }
+        toast.success(data.alreadyActive ? 'Bet is already active' : 'Bet accepted successfully!')
+      } else {
+        toast.error(data.message || 'Failed to accept bet')
       }
     } catch (error) {
       console.error('Error accepting bet:', error)
+      toast.error('An error occurred while accepting the bet')
     }
   }
 
-  const handleCancelBet = async (betId: string) => {
-    try {
-      const response = await fetch(`/api/bets/${betId}/cancel`, {
-        method: 'POST',
-      })
-      if (response.ok) {
-        // Remove the bet from the list
-        setBets(bets.filter(bet => bet.id !== betId))
-      }
-    } catch (error) {
-      console.error('Error canceling bet:', error)
-    }
+  if (isLoading && !localBets?.length) {
+    return <div>Loading bets...</div>
   }
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  if (bets.length === 0) {
+  if (!localBets || localBets.length === 0) {
     return <div>No {filter.toLowerCase()} bets found.</div>
   }
 
   return (
-    <div className="space-y-4">
-      {bets.map((bet) => (
-        <Card key={bet.id}>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="font-semibold">{bet.description}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Between {bet.creator.username} and {bet.opponent.username}
+    <div className="grid gap-4">
+      {localBets.map((bet: Bet) => (
+        <Card key={bet.id} className="p-4">
+          <CardContent>
+            <div className="flex justify-between items-center">
+              {/* Left: Creator */}
+              <div className="flex flex-col items-center">
+                <Avatar className="mb-2">
+                  <AvatarImage src={bet.creator.profileImage || ''} />
+                  <AvatarFallback>{bet.creator.username[0]}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm">{bet.creator.username}</span>
+              </div>
+
+              {/* Center: Bet Details */}
+              <div className="flex-1 mx-8 text-center">
+                <p className="text-lg mb-2">{bet.description}</p>
+                <p className="text-sm text-gray-500">
+                  Deadline: {new Date(bet.deadline).toLocaleDateString()}
                 </p>
               </div>
-              <div className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(bet.deadline), { addSuffix: true })}
+
+              {/* Right: Opponent */}
+              <div className="flex flex-col items-center">
+                <Avatar className="mb-2">
+                  <AvatarImage src={bet.opponent.profileImage || ''} />
+                  <AvatarFallback>{bet.opponent.username[0]}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm">{bet.opponent.username}</span>
+                <span className="text-sm text-gray-500 mt-1">{bet.status}</span>
               </div>
             </div>
+
+            {/* Bottom: Interaction Buttons */}
+            <div className="flex justify-between mt-4 px-4">
+              <button className="hover:text-gray-600 flex items-center gap-1">
+                <FaHeart className="text-gray-500" /> {bet.likes || 0}
+              </button>
+              <button className="hover:text-gray-600 flex items-center gap-1">
+                <FaComment className="text-gray-500" /> {bet.comments || 0}
+              </button>
+              <button className="hover:text-gray-600">
+                <FaShare className="text-gray-500" />
+              </button>
+              <button className="hover:text-gray-600">
+                <FaBookmark className="text-gray-500" />
+              </button>
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-end space-x-2">
-            {filter === 'PENDING' && bet.opponent.id === session?.user?.id && (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleCancelBet(bet.id)}
-                >
-                  Decline
-                </Button>
-                <Button 
-                  onClick={() => handleAcceptBet(bet.id)}
-                >
-                  Accept
-                </Button>
-              </>
-            )}
-            {filter === 'PENDING' && bet.creator.id === session?.user?.id && (
-              <Button 
-                variant="outline" 
-                onClick={() => handleCancelBet(bet.id)}
-              >
-                Cancel
+
+          {filter === 'pending' && bet.opponentId === session?.user?.id && (
+            <CardFooter>
+              <Button onClick={() => handleAcceptBet(bet)}>
+                Accept
               </Button>
-            )}
-          </CardFooter>
+            </CardFooter>
+          )}
         </Card>
       ))}
+      
+      {hasMore && (
+        <div ref={ref} className="h-10">
+          {isLoading && <div>Loading more...</div>}
+        </div>
+      )}
     </div>
   )
 } 

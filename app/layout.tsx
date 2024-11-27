@@ -13,6 +13,7 @@ import { Inter } from 'next/font/google'
 import AuthSessionProvider from '@/app/providers/session-provider'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 // Initialize Inter font with Latin subset
 const inter = Inter({ subsets: ['latin'] })
@@ -56,6 +57,7 @@ export default function RootLayout({
             </AuthProvider>
           </ThemeProvider>
         </AuthSessionProvider>
+        <Toaster position="bottom-center" />
       </body>
     </html>
   )

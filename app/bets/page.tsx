@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BetList } from '@/app/components/bet-list'
+import BetList from '../components/bet-list'
+import type { BetFilter } from '@/types'
 
 export default function BetsPage() {
   return (
@@ -15,13 +16,13 @@ export default function BetsPage() {
           <TabsTrigger value="completed">Completed</TabsTrigger>
         </TabsList>
         <TabsContent value="pending">
-          <BetList filter="PENDING" />
+          <BetList filter="pending" />
         </TabsContent>
         <TabsContent value="active">
-          <BetList filter="ACTIVE" />
+          <BetList filter="active" />
         </TabsContent>
         <TabsContent value="completed">
-          <BetList filter="COMPLETED" />
+          <BetList filter="completed" />
         </TabsContent>
       </Tabs>
     </div>

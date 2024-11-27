@@ -1,79 +1,43 @@
 import { useState, useEffect } from 'react'
-import { Bet } from '@/types'
+import { useSession } from 'next-auth/react'
+import type { Bet } from '@/types'
 
-interface UseBetsProps {
+interface UseBetsParams {
+  filter: string
   page: number
   userId?: string
-  filter?: 'active' | 'completed' | 'all'
   bookmarksOnly?: boolean
 }
 
-interface UseBetsReturn {
-  bets: Bet[]
-  isLoading: boolean
-  hasMore: boolean
-}
-
-interface APIBet {
-  id: string
-  description: string
-  deadline: string
-  status: string
-  createdAt: string
-  creator: {
-    id: string
-    username: string
-    profileImage?: string
-  }
-  opponent?: {
-    id: string
-    username: string
-    profileImage?: string
-  }
-}
-
-interface APIResponse {
-  bets: APIBet[]
-}
-
-export function useBets({ page, userId, filter, bookmarksOnly }: UseBetsProps): UseBetsReturn {
+export const useBets = ({ filter, page, userId, bookmarksOnly = false }: UseBetsParams) => {
   const [bets, setBets] = useState<Bet[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
     const fetchBets = async () => {
-      setIsLoading(true)
+      if (!userId) {
+        setIsLoading(false)
+        return
+      }
+
       try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          ...(userId && { userId }),
-          ...(filter && { filter }),
-          ...(bookmarksOnly && { bookmarksOnly: 'true' })
-        })
-
-        const response = await fetch(`/api/bets?${params}`)
-        const data: APIResponse = await response.json()
+        setIsLoading(true)
+        const response = await fetch(
+          `/api/bets?filter=${filter}&userId=${userId}&page=${page}&bookmarksOnly=${bookmarksOnly}`
+        )
         
-        // Transform the data to match our types
-        const transformedBets = data.bets.map((bet: APIBet) => ({
-          ...bet,
-          deadline: new Date(bet.deadline),
-          createdAt: new Date(bet.createdAt),
-          creator: {
-            id: bet.creator.id,
-            username: bet.creator.username,
-            profileImage: bet.creator.profileImage
-          },
-          opponent: bet.opponent ? {
-            id: bet.opponent.id,
-            username: bet.opponent.username,
-            profileImage: bet.opponent.profileImage
-          } : undefined
-        }))
-
-        setBets(prev => page === 1 ? transformedBets : [...prev, ...transformedBets])
-        setHasMore(transformedBets.length > 0)
+        if (response.ok) {
+          const data = await response.json()
+          const pageSize = 10
+          setHasMore(data.length === pageSize)
+          
+          if (page === 1) {
+            setBets(data)
+          } else {
+            setBets(prev => [...prev, ...data])
+          }
+        }
       } catch (error) {
         console.error('Error fetching bets:', error)
       } finally {
@@ -82,7 +46,7 @@ export function useBets({ page, userId, filter, bookmarksOnly }: UseBetsProps): 
     }
 
     fetchBets()
-  }, [page, userId, filter, bookmarksOnly])
+  }, [filter, userId, page, bookmarksOnly])
 
   return { bets, isLoading, hasMore }
 } 
