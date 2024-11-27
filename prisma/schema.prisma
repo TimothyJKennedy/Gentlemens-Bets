@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  username      String     @unique
+  email         String     @unique
+  password      String
+  profileImage  String?
+  createdBets   Bet[]      @relation("CreatedBets")
+  opponentBets  Bet[]      @relation("OpponentBets")
+  bookmarks     Bookmark[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Bet {
+  id          String     @id @default(cuid())
+  creatorId   String
+  creator     User       @relation("CreatedBets", fields: [creatorId], references: [id])
+  opponentId  String?
+  opponent    User?      @relation("OpponentBets", fields: [opponentId], references: [id])
+  description String
+  deadline    DateTime
+  status      String     @default("PENDING")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  bookmarks   Bookmark[]
+
+  @@index([creatorId])
+  @@index([opponentId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  betId     String
+  user      User     @relation(fields: [userId], references: [id])
+  bet       Bet      @relation(fields: [betId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, betId])
+  @@index([userId])
+  @@index([betId])
+} 
