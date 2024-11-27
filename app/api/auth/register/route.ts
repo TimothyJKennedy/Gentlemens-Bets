@@ -2,13 +2,16 @@ import { hash } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
+// Regular expression for email validation
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// POST handler for user registration
 export async function POST(req: Request) {
   try {
+    // Parse request body
     const { username, email, password, confirmPassword } = await req.json()
 
-    // Validation
+    // Validation checks
     if (!username || !email || !password || !confirmPassword) {
       return NextResponse.json(
         { message: 'All fields are required' },
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // Check if user already exists
+    // Check if email or username already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [

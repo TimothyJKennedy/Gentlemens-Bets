@@ -12,6 +12,7 @@ interface BetCardProps {
   bet: Bet
 }
 
+// BetCard component to display individual bet details
 export function BetCard({ bet }: BetCardProps) {
   return (
     <Card className="p-4">

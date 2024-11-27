@@ -16,10 +16,13 @@ import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
+// Component for creating a new bet
 export function CreateBetForm() {
+  // State for managing the selected date
   const [date, setDate] = useState<Date>()
 
   return (
+    // Card component to encapsulate the form
     <Card className="max-w-2xl mx-auto border bg-card">
       <CardHeader className="space-y-1">
         <h2 className="text-2xl font-semibold tracking-tight">Create a New Bet</h2>
@@ -29,6 +32,7 @@ export function CreateBetForm() {
       </CardHeader>
       
       <CardContent className="space-y-6">
+        {/* Input for opponent's name */}
         <div className="space-y-2">
           <Label htmlFor="opponent" className="text-sm font-medium">
             Opponent
@@ -40,6 +44,7 @@ export function CreateBetForm() {
           />
         </div>
 
+        {/* Textarea for bet description */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-sm font-medium">
             Description
@@ -51,6 +56,7 @@ export function CreateBetForm() {
           />
         </div>
 
+        {/* Date picker for bet deadline */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Deadline</Label>
           <Popover>
@@ -80,6 +86,7 @@ export function CreateBetForm() {
       </CardContent>
 
       <CardFooter>
+        {/* Submit button for creating the bet */}
         <Button 
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           size="lg"

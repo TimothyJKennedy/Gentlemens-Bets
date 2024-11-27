@@ -1,5 +1,6 @@
 'use client'
 
+// Import necessary modules and components
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
@@ -7,20 +8,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 
+// Define the LoginForm component
+// Import necessary hooks and components
 export function LoginForm() {
+  // State variables for email and password inputs
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault() // Prevent default form submission
+    // Call signIn function from next-auth with credentials
     await signIn('credentials', {
       email,
       password,
-      callbackUrl: '/'
+      callbackUrl: '/' // Redirect to home page on successful sign-in
     })
   }
 
   return (
+    // Suppress hydration warnings
     <div suppressHydrationWarning>
       <Card className="w-full max-w-md" suppressHydrationWarning>
         <CardHeader className="space-y-1">

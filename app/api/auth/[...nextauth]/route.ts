@@ -8,12 +8,15 @@ import { AdapterUser } from "next-auth/adapters"
 import type { NextAuthOptions } from "next-auth"
 import type { RequestInternal } from "next-auth"
 
+// NextAuth configuration for handling authentication
 const handler = NextAuth({
+  // Custom pages for authentication
   pages: {
     signIn: '/auth/signin',
     signOut: '/auth/signout',
     error: '/auth/error',
   },
+  // Define authentication providers
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -21,6 +24,7 @@ const handler = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
+      // Authorize function to validate credentials
       async authorize(
         credentials: Record<"email" | "password", string> | undefined,
         req: Pick<RequestInternal, "body" | "query" | "headers" | "method">
@@ -47,6 +51,7 @@ const handler = NextAuth({
       }
     })
   ],
+  // Callbacks for handling JWT and session
   callbacks: {
     async jwt({ token, user, account, profile }: {
       token: JWT;
@@ -72,6 +77,7 @@ const handler = NextAuth({
       return session;
     }
   },
+  // Use JWT for session management
   session: {
     strategy: 'jwt'
   }

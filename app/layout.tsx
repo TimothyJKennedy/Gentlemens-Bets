@@ -14,34 +14,42 @@ import AuthSessionProvider from '@/app/providers/session-provider'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
 
+// Initialize Inter font with Latin subset
 const inter = Inter({ subsets: ['latin'] })
 
+// Root layout component that wraps the entire application
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Get current pathname to determine if we're on an auth page
   const pathname = usePathname()
   const isAuthPage = pathname?.startsWith('/auth/')
   const { setTheme } = useTheme()
 
-  useEffect(() => {
+  useEffect(() => { 
     if (isAuthPage) {
       setTheme('light')
     }
   }, [isAuthPage, setTheme])
 
   return (
+    // HTML element with language and hydration warning suppression
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
+        {/* Provider stack for global state and functionality */}
         <AuthSessionProvider>
           <ThemeProvider>
             <AuthProvider>
               <BookmarksProvider>
                 <NotificationsProvider>
+                  {/* Only show header if not on auth pages */}
                   {!isAuthPage && <Header />}
                   <NotificationStack />
+                  {/* Main content area with optional padding */}
                   <main className={!isAuthPage ? "pb-16" : ""} suppressHydrationWarning>{children}</main>
+                  {/* Only show bottom navigation if not on auth pages */}
                   {!isAuthPage && <BottomNav />}
                 </NotificationsProvider>
               </BookmarksProvider>
