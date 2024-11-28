@@ -4,10 +4,10 @@ import { useSession } from 'next-auth/react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useInView } from 'react-intersection-observer'
 import { useEffect } from 'react'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Bet } from '@prisma/client'
+import { Bet } from '@/types'
+import { BetCard } from './bet-card'
 
 interface BetListProps {
   filter: string
@@ -24,19 +24,64 @@ interface CustomBet {
   opponentId: string;
   description: string;
   deadline: Date;
-  status: 'PENDING' | 'ACTIVE' | 'CANCELLATION_REQUESTED' | 'CANCELLED' | 'COMPLETED' | 'REJECTED';
+  status: 'PENDING' | 'ACTIVE' | 'CANCELLATION_REQUESTED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
   cancellationRequesterId: string | null;
   createdAt: Date;
   updatedAt: Date;
-  creator?: {
+  creator: {
     id: string;
     username: string;
+    profileImage?: string;
   };
   opponent?: {
     id: string;
     username: string;
+    profileImage?: string;
   };
 }
+
+const convertToBetType = (customBet: CustomBet): Bet => {
+  const { 
+    id,
+    creatorId,
+    opponentId,
+    description,
+    deadline,
+    status,
+    cancellationRequesterId,
+    createdAt,
+    updatedAt,
+    creator,
+    opponent
+  } = customBet;
+  
+  let betStatus: Bet['status'];
+  if (status === 'CANCELLED' || status === 'REJECTED') {
+    betStatus = 'COMPLETED';
+  } else {
+    betStatus = status as Bet['status'];
+  }
+
+  const betOpponent = opponent || {
+    id: '',
+    username: 'bob',
+    profileImage: undefined
+  };
+
+  return {
+    id,
+    creatorId,
+    opponentId,
+    description,
+    deadline,
+    status: betStatus,
+    cancellationRequestedBy: cancellationRequesterId || undefined,
+    createdAt,
+    updatedAt,
+    creator,
+    opponent: betOpponent
+  };
+};
 
 export default function BetList({ filter }: BetListProps) {
   const queryClient = useQueryClient()
@@ -239,21 +284,12 @@ export default function BetList({ filter }: BetListProps) {
       {data?.pages.map((page: PageData) => (
         <div key={page.nextPage}>
           {page.bets.map((bet: CustomBet) => (
-            <Card key={bet.id}>
-              <CardContent className="pt-6">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-semibold">{bet.description}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Deadline: {new Date(bet.deadline).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
+            <div key={bet.id}>
+              <BetCard bet={convertToBetType(bet)} />
+              <div className="mt-2 flex justify-end">
                 {renderActionButtons(bet)}
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       ))}
