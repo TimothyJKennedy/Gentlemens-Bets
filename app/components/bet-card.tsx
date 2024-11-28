@@ -2,73 +2,78 @@
 
 import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Clock, Bookmark } from 'lucide-react'
 import { Bet } from '@/types'
+import { cn } from '@/lib/utils'
 
 interface BetCardProps {
   bet: Bet
 }
 
 export function BetCard({ bet }: BetCardProps) {
+  const getInitials = (username: string) => username[0].toUpperCase()
+  const formattedDeadline = format(new Date(bet.deadline), 'MMM d, yyyy')
+
   return (
-    <Card className="p-4">
-      {/* Main bet content with simplified layout */}
-      <div className="flex items-center justify-between">
-        {/* Left side - Creator */}
-        <div className="flex flex-col items-center">
-          <Link href={`/profile/${bet.creator.id}`}>
+    <Card className="overflow-hidden">
+      <CardContent className="p-6">
+        {/* Users and Status Row */}
+        <div className="flex items-center justify-between mb-4">
+          {/* Creator */}
+          <Link href={`/profile/${bet.creator.id}`} className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={bet.creator.profileImage} />
-              <AvatarFallback>{bet.creator.username[0]}</AvatarFallback>
+              <AvatarImage src={bet.creator.profileImage} alt={bet.creator.username} />
+              <AvatarFallback>{getInitials(bet.creator.username)}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">{bet.creator.username}</span>
+          </Link>
+
+          {/* VS Indicator */}
+          <span className="text-sm font-semibold text-muted-foreground">VS</span>
+
+          {/* Opponent */}
+          <Link href={`/profile/${bet.opponent.id}`} className="flex items-center gap-2">
+            <span className="text-sm font-medium">{bet.opponent.username}</span>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={bet.opponent.profileImage} alt={bet.opponent.username} />
+              <AvatarFallback>{getInitials(bet.opponent.username)}</AvatarFallback>
             </Avatar>
           </Link>
-          <Link href={`/profile/${bet.creator.id}`} className="text-sm mt-1">
-            {bet.creator.username}
-          </Link>
         </div>
 
-        {/* Right side - Opponent */}
-        <div className="flex flex-col items-center">
-          {bet.opponent ? (
-            <>
-              <Link href={`/profile/${bet.opponent.id}`}>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={bet.opponent.profileImage} />
-                  <AvatarFallback>{bet.opponent.username[0]}</AvatarFallback>
-                </Avatar>
-              </Link>
-              <Link href={`/profile/${bet.opponent.id}`} className="text-sm mt-1">
-                {bet.opponent.username}
-              </Link>
-            </>
-          ) : (
-            <>
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>?</AvatarFallback>
-              </Avatar>
-              <span className="text-sm mt-1">bob</span>
-            </>
-          )}
+        {/* Bet Description */}
+        <div className="space-y-4">
+          <p className="text-sm">{bet.description}</p>
+          
+          {/* Deadline and Status */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              <span>Ends {formattedDeadline}</span>
+            </div>
+            <span className={cn(
+              "px-2 py-1 rounded-full text-xs font-medium",
+              bet.status === 'ACTIVE' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+              bet.status === 'PENDING' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+              bet.status === 'COMPLETED' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+            )}>
+              {bet.status}
+            </span>
+          </div>
         </div>
-      </div>
+      </CardContent>
 
-      {/* Centered bet description and deadline */}
-      <div className="mt-4 mb-2 text-center">
-        <p className="text-sm font-medium">{bet.description}</p>
-        <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-muted-foreground">
-            Deadline: {format(new Date(bet.deadline), 'MMM d, yyyy')}
-          </span>
-          <span className="text-xs text-muted-foreground">ACTIVE</span>
-        </div>
-      </div>
-
-      {/* Simplified action buttons */}
-      <CardFooter className="flex justify-start gap-4 pt-2 px-0 pb-0">
-        <Button variant="ghost" size="sm" className="text-muted-foreground p-0 h-auto">
+      {/* Interaction Buttons */}
+      <CardFooter className="px-6 py-4 border-t flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Like bet"
+        >
           <Heart className="h-4 w-4" />
           <span className="text-xs ml-1">0</span>
         </Button>
