@@ -1,53 +1,94 @@
 'use client'
 
-// Import necessary dependencies and components
-import { useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInView } from 'react-intersection-observer'
+import { useEffect } from 'react'
 import { BetCard } from './bet-card'
-import { InfiniteScroll } from './infinite-scroll'
-import { useBets } from '@/hooks/useBets'
-import { Bet } from '@/types'
+import { Loader2 } from 'lucide-react'
+import type { Bet } from '@/types'
+import type { InfiniteData, QueryFunctionContext } from '@tanstack/react-query'
 
-// Define props interface for BetFeed component
 interface BetFeedProps {
   userId?: string
-  filter?: 'active' | 'completed' | 'all'
+  filter?: string
   bookmarksOnly?: boolean
 }
 
-// BetFeed component that displays a scrollable list of bets
-export function BetFeed({ userId, filter = 'all', bookmarksOnly = false }: BetFeedProps) {
-  // State to track the current page for infinite scroll
-  const [page, setPage] = useState(1)
-  const { bets, isLoading, hasMore } = useBets({ page, userId, filter, bookmarksOnly })
+interface BetResponse {
+  bets: Bet[]
+  nextPage: number | null
+}
 
-  // Function to load more bets when scrolling
-  const loadMore = () => {
-    if (!isLoading && hasMore) {
-      setPage(prev => prev + 1)
-    }
+type BetQueryKey = ['bets', string, string | undefined, boolean]
+
+export function BetFeed({ userId, filter = 'active', bookmarksOnly = false }: BetFeedProps) {
+  const { ref, inView } = useInView()
+
+  const fetchBets = async (context: QueryFunctionContext<BetQueryKey, number>) => {
+    const { pageParam = 1 } = context
+    
+    const searchParams = new URLSearchParams({
+      page: pageParam.toString(),
+      filter,
+      ...(userId && { userId }),
+      ...(bookmarksOnly && { bookmarksOnly: 'true' })
+    })
+    
+    const response = await fetch(`/api/bets?${searchParams}`)
+    if (!response.ok) throw new Error('Network response was not ok')
+    const data: BetResponse = await response.json()
+    return data
   }
 
-  // Render a message if no bets are found and loading is complete
-  if (bets.length === 0 && !isLoading) {
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching
+  } = useInfiniteQuery<BetResponse, Error, InfiniteData<BetResponse>, BetQueryKey, number>({
+    queryKey: ['bets', filter, userId, bookmarksOnly] as const,
+    queryFn: fetchBets,
+    getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
+    initialPageParam: 1
+  })
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  if (isFetching && !isFetchingNextPage) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No bets found
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     )
   }
 
-  // Render the feed with infinite scroll functionality
+  if (error) {
+    return <div className="text-center py-8 text-destructive">Error: {error.message}</div>
+  }
+
   return (
-    <InfiniteScroll
-      loadMore={loadMore}
-      hasMore={hasMore}
-      isLoading={isLoading}
-    >
-      <div className="space-y-4">
-        {bets.map((bet: Bet) => (
-          <BetCard key={bet.id} bet={bet} />
-        ))}
-      </div>
-    </InfiniteScroll>
+    <div className="space-y-6">
+      {data?.pages.map((page: BetResponse) => (
+        <div key={page.bets[0]?.id ?? 'empty-page'} className="space-y-6">
+          {page.bets.map((bet: Bet) => (
+            <BetCard key={bet.id} bet={bet} />
+          ))}
+        </div>
+      ))}
+      
+      {hasNextPage && (
+        <div ref={ref} className="flex justify-center py-4">
+          {isFetchingNextPage && (
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          )}
+        </div>
+      )}
+    </div>
   )
 } 
