@@ -43,7 +43,7 @@ export function NavMenu({ isOpen, setIsOpen }: NavMenuProps) {
                 </div>
               </Link>
 
-              {/* Home link moved below profile */}
+              {/* Home link */}
               <Link 
                 href="/" 
                 onClick={() => setIsOpen(false)}
@@ -53,16 +53,7 @@ export function NavMenu({ isOpen, setIsOpen }: NavMenuProps) {
                 <span className="text-lg">Home</span>
               </Link>
 
-              {/* Rest of your navigation links */}
-              <Link 
-                href="/create" 
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 p-3 hover:bg-accent rounded-lg"
-              >
-                <Plus className="h-6 w-6" />
-                <span className="text-lg">Create Bet</span>
-              </Link>
-
+              {/* Manage Bets link */}
               <Link 
                 href="/bets" 
                 onClick={() => setIsOpen(false)}
@@ -72,6 +63,7 @@ export function NavMenu({ isOpen, setIsOpen }: NavMenuProps) {
                 <span className="text-lg">Manage Bets</span>
               </Link>
 
+              {/* Notifications link */}
               <Link 
                 href="/notifications" 
                 onClick={() => setIsOpen(false)}
@@ -81,6 +73,7 @@ export function NavMenu({ isOpen, setIsOpen }: NavMenuProps) {
                 <span className="text-lg">Notifications</span>
               </Link>
 
+              {/* Settings link */}
               <Link 
                 href="/settings" 
                 onClick={() => setIsOpen(false)}
