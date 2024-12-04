@@ -24,38 +24,40 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const filter = searchParams.get('filter') || 'all'
-    const pageSize = 10
+    const pageSize = parseInt(searchParams.get('pageSize') || String(ITEMS_PER_PAGE))
+    const filter = searchParams.get('filter') || 'active'
+    const userId = searchParams.get('userId')
 
-    // Build the where clause based on the filter
     let whereClause: any = {
-      OR: [
-        { creatorId: session.user.id },
-        { opponentId: session.user.id }
-      ]
+      AND: []
     }
 
-    // Update filter logic to include CANCELLATION_REQUESTED in pending
+    // Add status filter based on the filter type
     switch (filter) {
       case 'pending':
-        whereClause.status = {
-          in: ['PENDING', 'CANCELLATION_REQUESTED']
-        }
+        whereClause.AND.push({ status: 'PENDING' })
         break
       case 'active':
-        whereClause.status = 'ACTIVE'
+        whereClause.AND.push({ status: 'ACTIVE' })
         break
       case 'completed':
-        whereClause.status = {
-          in: ['COMPLETED', 'CANCELLED']
-        }
+        whereClause.AND.push({ status: 'COMPLETED' })
         break
+      // 'all' case is not needed as we default to 'active'
     }
 
-    const totalBets = await prisma.bet.count({
-      where: whereClause
-    })
+    // Add user filter if userId is provided
+    if (userId) {
+      whereClause.AND.push({
+        OR: [
+          { creatorId: userId },
+          { opponentId: userId }
+        ]
+      })
+    }
 
+    // Get total count and bets
+    const totalBets = await prisma.bet.count({ where: whereClause })
     const bets = await prisma.bet.findMany({
       where: whereClause,
       include: {
@@ -64,6 +66,10 @@ export async function GET(request: Request) {
         },
         opponent: {
           select: { id: true, username: true }
+        },
+        bookmarks: {
+          where: { userId: session.user.id },
+          select: { id: true }
         }
       },
       orderBy: {

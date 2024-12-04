@@ -1,27 +1,44 @@
-// Import NextAuth's useSession hook for session management
-import { useSession } from 'next-auth/react'
+'use client'
 
-// Define the User interface for type-safe user data handling
-export interface User {
+import { useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
+
+export interface AuthUser {
   id: string
   name: string | null
   email: string | null
   profileImage: string | null
+  activeBetsCount?: number
+  completedBetsCount?: number
 }
 
-// Custom hook to access and transform the auth session data
+interface UserStats {
+  activeBetsCount: number
+  completedBetsCount: number
+}
+
 export function useAuth() {
-  // Destructure session data and loading status from NextAuth
-  const { data: session, status } = useSession()
-  
-  // Return transformed user data and loading state
+  const { data: session } = useSession()
+  const user = session?.user as AuthUser | null
+
+  const { data: stats } = useQuery<UserStats>({
+    queryKey: ['userStats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { activeBetsCount: 0, completedBetsCount: 0 }
+      const response = await fetch('/api/user/stats')
+      if (!response.ok) {
+        throw new Error('Failed to fetch user stats')
+      }
+      return response.json()
+    },
+    enabled: !!user?.id,
+  })
+
   return {
-    user: session?.user ? {
-      id: session.user.id,
-      name: session.user.name ?? null,
-      email: session.user.email ?? null,
-      profileImage: session.user.image ?? null,
+    user: user ? {
+      ...user,
+      activeBetsCount: stats?.activeBetsCount ?? 0,
+      completedBetsCount: stats?.completedBetsCount ?? 0,
     } : null,
-    isLoading: status === 'loading'
   }
 } 

@@ -10,8 +10,8 @@ import type { InfiniteData, QueryFunctionContext } from '@tanstack/react-query'
 
 interface BetFeedProps {
   userId?: string
-  filter?: string
-  bookmarksOnly?: boolean
+  type: 'active' | 'completed'
+  className?: string
 }
 
 interface BetResponse {
@@ -19,9 +19,9 @@ interface BetResponse {
   nextPage: number | null
 }
 
-type BetQueryKey = ['bets', string, string | undefined, boolean]
+type BetQueryKey = ['bets', string, string | undefined, 'active' | 'completed']
 
-export function BetFeed({ userId, filter = 'active', bookmarksOnly = false }: BetFeedProps) {
+export function BetFeed({ userId, type, className = '' }: BetFeedProps) {
   const { ref, inView } = useInView()
 
   const fetchBets = async (context: QueryFunctionContext<BetQueryKey, number>) => {
@@ -29,14 +29,16 @@ export function BetFeed({ userId, filter = 'active', bookmarksOnly = false }: Be
     
     const searchParams = new URLSearchParams({
       page: pageParam.toString(),
-      filter,
+      type,
       ...(userId && { userId }),
-      ...(bookmarksOnly && { bookmarksOnly: 'true' })
     })
     
     const response = await fetch(`/api/bets?${searchParams}`)
     if (!response.ok) throw new Error('Network response was not ok')
     const data: BetResponse = await response.json()
+    
+    console.log('Fetched Bets:', data.bets)
+    
     return data
   }
 
@@ -48,7 +50,7 @@ export function BetFeed({ userId, filter = 'active', bookmarksOnly = false }: Be
     isFetchingNextPage,
     isFetching
   } = useInfiniteQuery<BetResponse, Error, InfiniteData<BetResponse>, BetQueryKey, number>({
-    queryKey: ['bets', filter, userId, bookmarksOnly] as const,
+    queryKey: ['bets', type, userId, type] as const,
     queryFn: fetchBets,
     getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
     initialPageParam: 1
@@ -73,7 +75,7 @@ export function BetFeed({ userId, filter = 'active', bookmarksOnly = false }: Be
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${className}`}>
       {data?.pages.map((page: BetResponse) => (
         <div key={page.bets[0]?.id ?? 'empty-page'} className="space-y-6">
           {page.bets.map((bet: Bet) => (
