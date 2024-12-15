@@ -1,4 +1,5 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) Web Application currently under development.
+Gentlemen's Bet is an application for users to create, track, manage, and resolve their gentlemen's bets with other users and interact with other users bets in a social feed based on their friends list.
 
 ## Getting Started
 
